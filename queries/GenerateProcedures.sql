@@ -115,7 +115,7 @@ END;
 $$;
 
 -------------------------
--- AGREGAR PRODUCTO
+
 CREATE OR REPLACE PROCEDURE SP_AGREGAR_PRODUCTOS (
     P_NOMBRE VARCHAR,
     P_DESCRIPCION TEXT,
@@ -153,7 +153,7 @@ end;
 $$ LANGUAGE  plpgsql;
 
 
--- AGREGAR PRECIO BASE
+
 CREATE OR REPLACE PROCEDURE SP_AGREGAR_PRECIO_BASE (
     P_SKU VARCHAR,
     P_NOMBRE_PROVEEDOR VARCHAR,
@@ -168,7 +168,7 @@ DECLARE
     V_ID_PROVEEDOR UUID;
     V_ID_PRECIO_ACTIVO UUID;
 BEGIN
-    -- validar al proveedor
+   
     SELECT id_empresa INTO V_ID_EMPRESA
     FROM empresa
     WHERE nombre = P_NOMBRE_PROVEEDOR;
@@ -240,9 +240,7 @@ BEGIN
         P_PRECIO_BASE;
 END;
 $$ LANGUAGE plpgsql;
---------------------------
 
---------------PROCEDURE FACTURA
 CREATE OR REPLACE PROCEDURE SP_AGREGAR_FACTURA (
     P_ID_ORDEN UUID
 ) AS $$
@@ -322,9 +320,7 @@ DECLARE
     V_TOTAL DECIMAL(14,2);
 BEGIN
 
-    ------------------------------------------------------------
-    -- PROVEEDOR
-    ------------------------------------------------------------
+
     SELECT
         p.id_proveedor,
         e.id_empresa
@@ -344,9 +340,7 @@ BEGIN
     END IF;
 
 
-    ------------------------------------------------------------
-    -- EMPRESA COMPRADORA
-    ------------------------------------------------------------
+ 
     SELECT e.id_empresa
     INTO V_ID_EMPRESA_COMPRADORA
     FROM empresa e
@@ -359,9 +353,7 @@ BEGIN
     END IF;
 
 
-    ------------------------------------------------------------
-    -- SUCURSAL
-    ------------------------------------------------------------
+
     SELECT se.id_sucursal
     INTO V_ID_SUCURSAL
     FROM sucursal_empresa se
@@ -376,9 +368,7 @@ BEGIN
     END IF;
 
 
-    ------------------------------------------------------------
-    -- ALMACEN
-    ------------------------------------------------------------
+ 
     SELECT a.id_almacen
     INTO V_ID_ALMACEN
     FROM almacen a
@@ -393,9 +383,7 @@ BEGIN
     END IF;
 
 
-    ------------------------------------------------------------
-    -- USUARIO
-    ------------------------------------------------------------
+
     SELECT u.id_usuario
     INTO V_ID_USUARIO
     FROM usuario u
@@ -410,9 +398,7 @@ BEGIN
     END IF;
 
 
-    ------------------------------------------------------------
-    -- VALIDACIONES BASICAS
-    ------------------------------------------------------------
+
     IF P_PRODUCTOS_LISTA IS NULL OR jsonb_array_length(P_PRODUCTOS_LISTA) = 0 THEN
         RAISE EXCEPTION 'La orden debe tener al menos un producto';
     END IF;
@@ -437,9 +423,6 @@ BEGIN
     END IF;
 
 
-    ------------------------------------------------------------
-    -- VALIDAR PRODUCTOS EXISTENTES
-    ------------------------------------------------------------
     IF EXISTS (
         SELECT 1
         FROM jsonb_array_elements(P_PRODUCTOS_LISTA) AS producto
@@ -451,9 +434,6 @@ BEGIN
     END IF;
 
 
-    ------------------------------------------------------------
-    -- VALIDAR PRECIO BASE VIGENTE
-    ------------------------------------------------------------
     IF EXISTS (
         SELECT 1
         FROM jsonb_array_elements(P_PRODUCTOS_LISTA) AS producto
@@ -474,9 +454,7 @@ BEGIN
     END IF;
 
 
-    ------------------------------------------------------------
-    -- VALIDAR STOCK
-    ------------------------------------------------------------
+
     IF EXISTS (
         SELECT 1
         FROM (
@@ -500,9 +478,7 @@ BEGIN
     END IF;
 
 
-    ------------------------------------------------------------
-    -- CALCULAR TOTAL CON DESCUENTO DE CONTRATO + TRAMO
-    ------------------------------------------------------------
+
     WITH productos_pedidos AS (
         SELECT
             producto->>'sku' AS sku,
@@ -655,9 +631,6 @@ BEGIN
     END IF;
 
 
-    ------------------------------------------------------------
-    -- INSERTAR ORDEN
-    ------------------------------------------------------------
     INSERT INTO orden_compra (
         total,
         fecha,
@@ -681,9 +654,7 @@ BEGIN
     RETURNING id_orden INTO V_ID_ORDEN_NUEVA;
 
 
-    ------------------------------------------------------------
-    -- INSERTAR DETALLE CON EL MISMO DESCUENTO
-    ------------------------------------------------------------
+
     WITH productos_pedidos AS (
         SELECT
             producto->>'sku' AS sku,
@@ -834,9 +805,7 @@ BEGIN
     FROM precios_finales;
 
 
-    ------------------------------------------------------------
-    -- DESCONTAR STOCK
-    ------------------------------------------------------------
+   
     UPDATE producto_almacen pa
     SET stock = pa.stock - productos_pedidos.cantidad
     FROM (
@@ -860,11 +829,6 @@ END;
 $$;
 ------------------
 
--- PROCEDURES
--- datos como contactos, sucursales, almacenes, y tramos de precio serán enviados como un JSONB
-
--- crear empresa con contactos y sucursales -> validar que la empresa o contactos no existan
-DROP PROCEDURE p_empresa_nueva(p_empresa_datos json, p_empresa_contactos json, p_empresa_sucursales json);
 CREATE OR REPLACE PROCEDURE p_empresa_nueva(
     IN P_EMPRESA_DATOS JSONB, IN P_EMPRESA_CONTACTOS JSONB, IN P_EMPRESA_SUCURSALES JSONB
 ) AS
@@ -967,8 +931,6 @@ CREATE OR REPLACE PROCEDURE p_empresa_nueva(
     $$ LANGUAGE plpgsql;
 
 
---- poner como proveedora a una empresa y su comision
-DROP PROCEDURE SP_AGREGAR_EMPRESA_PROVEEDORA(P_NOMBRE_EMPRESA VARCHAR, P_DATOS_COMISION JSON, P_ALMACENES JSON);
 CREATE OR REPLACE PROCEDURE SP_AGREGAR_EMPRESA_PROVEEDORA (
     P_NOMBRE_EMPRESA     VARCHAR,
     P_DATOS_COMISION     JSONB,
