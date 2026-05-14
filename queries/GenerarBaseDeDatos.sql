@@ -75,7 +75,7 @@ CREATE TABLE IF NOT EXISTS sucursal_empresa (
                                   id_sucursal UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                                   nombre      VARCHAR(150) NOT NULL,
                                   direccion   VARCHAR(255),
-                                  coordenadas POINT,
+                                  coordenadas DECIMAL(14,5),
                                   activo      BOOLEAN      NOT NULL DEFAULT TRUE,
                                   id_empresa  UUID          NOT NULL,
 
@@ -137,7 +137,8 @@ CREATE TABLE IF NOT EXISTS cat_proveedor (
 -- PRODUCTO
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS producto (
-                          sku           VARCHAR(100) PRIMARY KEY,
+                          id_producto            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                          sku           VARCHAR(100),
                           nombre        VARCHAR(200) NOT NULL,
                           descripcion   TEXT,
                           unidad_medida VARCHAR(50),
@@ -166,15 +167,15 @@ CREATE TABLE IF NOT EXISTS almacen (
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS producto_almacen (
                                   id_almacen UUID          NOT NULL,
-                                  sku        VARCHAR(100) NOT NULL,
+                                  id_producto        VARCHAR(100) NOT NULL,
                                   stock      INT          NOT NULL DEFAULT 0,
                                   max        DECIMAL(14,2),
                                   min        DECIMAL(14,2),
                                   activo     BOOLEAN      NOT NULL DEFAULT TRUE,
 
-                                  PRIMARY KEY (id_almacen, sku),
+                                  PRIMARY KEY (id_almacen, id_producto),
                                   CONSTRAINT fk_prodalmacen_almacen  FOREIGN KEY (id_almacen) REFERENCES almacen (id_almacen),
-                                  CONSTRAINT fk_prodalmacen_producto FOREIGN KEY (sku)        REFERENCES producto (sku)
+                                  CONSTRAINT fk_prodalmacen_producto FOREIGN KEY (id_producto)        REFERENCES producto (id_producto)
 );
 
 -- ------------------------------------------------------------
@@ -215,10 +216,10 @@ CREATE TABLE IF NOT EXISTS precio_base (
                              vigente_desde     TIMESTAMP     NOT NULL,
                              vigente_hasta     TIMESTAMP,
                              id_proveedor      UUID           NOT NULL,
-                             sku               VARCHAR(100)  NOT NULL,
+                             id_producto               VARCHAR(100)  NOT NULL,
 
                              CONSTRAINT fk_precio_proveedor FOREIGN KEY (id_proveedor)      REFERENCES proveedor (id_proveedor),
-                             CONSTRAINT fk_precio_producto  FOREIGN KEY (sku)               REFERENCES producto (sku)
+                             CONSTRAINT fk_precio_producto  FOREIGN KEY (id_producto)               REFERENCES producto (id_producto)
 );
 
 -- ------------------------------------------------------------
@@ -244,11 +245,11 @@ CREATE TABLE IF NOT EXISTS contrato_empresa_tarifas (
 CREATE TABLE IF NOT EXISTS contrato_empresa_detalle (
                                           id_detalle           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                                           porcentaje_descuento DECIMAL(14,2) NOT NULL,
-                                          sku                  VARCHAR(100),
+                                          id_producto                  VARCHAR(100),
                                           id_contrato          UUID           NOT NULL,
 
                                           CONSTRAINT fk_contdetalle_contrato FOREIGN KEY (id_contrato) REFERENCES contrato_empresa_tarifas (id_contrato),
-                                          CONSTRAINT fk_contdetalle_producto FOREIGN KEY (sku)         REFERENCES producto (sku)
+                                          CONSTRAINT fk_contdetalle_producto FOREIGN KEY (id_producto)         REFERENCES producto (id_producto)
 );
 
 -- ------------------------------------------------------------
@@ -282,7 +283,7 @@ CREATE TABLE IF NOT EXISTS orden_compra (
                               id_sucursal           UUID           NOT NULL,
                               id_usuario            UUID           NOT NULL,
                               id_estado             VARCHAR(20)   NOT NULL DEFAULT 'pendiente',
-                              fecha_orden           DATE,  
+                              fecha_orden           DATE,
 
                               CONSTRAINT chk_orden_estado CHECK (id_estado IN ('pendiente', 'aprobado', 'cancelado', 'rechazado')),
                               CONSTRAINT fk_orden_proveedor FOREIGN KEY (id_proveedor)          REFERENCES proveedor (id_proveedor),
@@ -299,13 +300,11 @@ CREATE TABLE IF NOT EXISTS detalle_orden (
                                cantidad        INT           NOT NULL,
                                precio_unitario DECIMAL(14,2) NOT NULL,
                                subtotal        DECIMAL(14,2) NOT NULL,
-                               id_orden        UUID          NOT NULL,
-                               sku             VARCHAR(100) NOT NULL,
-                               id_almacen      UUID          NOT NULL,
+                               id_orden        UUID           NOT NULL,
+                               id_producto             VARCHAR(100)  NOT NULL,
 
-                               CONSTRAINT fk_detorden_orden    FOREIGN KEY (id_orden)   REFERENCES orden_compra (id_orden),
-                               CONSTRAINT fk_detorden_producto FOREIGN KEY (sku)        REFERENCES producto (sku),
-                               CONSTRAINT fk_detorden_almacen  FOREIGN KEY (id_almacen) REFERENCES almacen (id_almacen)
+                               CONSTRAINT fk_detorden_orden    FOREIGN KEY (id_orden) REFERENCES orden_compra (id_orden),
+                               CONSTRAINT fk_detorden_producto FOREIGN KEY (id_producto)      REFERENCES producto (id_producto)
 );
 
 -- ------------------------------------------------------------
@@ -318,12 +317,12 @@ CREATE TABLE IF NOT EXISTS comision (
                           fecha           TIMESTAMP     NOT NULL,
                           id_detalle_orden UUID          NOT NULL UNIQUE,
                           id_proveedor    UUID           NOT NULL,
-                          id_regla_comision UUID NOT NULL,      
+                          id_regla_comision UUID NOT NULL,
 
                           CONSTRAINT fk_comision_detalle   FOREIGN KEY (id_detalle_orden) REFERENCES detalle_orden (id_detalle),
                           CONSTRAINT fk_comision_proveedor FOREIGN KEY (id_proveedor)     REFERENCES proveedor (id_proveedor),
-                          CONSTRAINT fk_comision_regla      FOREIGN KEY (id_regla_comision) REFERENCES reglas_comision (id_regla)  
-  );
+                          CONSTRAINT fk_comision_regla      FOREIGN KEY (id_regla_comision) REFERENCES reglas_comision (id_regla)
+);
 
 -- ------------------------------------------------------------
 -- FACTURA
@@ -349,10 +348,10 @@ CREATE TABLE IF NOT EXISTS detalle_factura (
                                  precio_unitario DECIMAL(14,2) NOT NULL,
                                  subtotal        DECIMAL(14,2) NOT NULL,
                                  id_factura      UUID           NOT NULL,
-                                 sku             VARCHAR(100)  NOT NULL,
+                                 id_producto             VARCHAR(100)  NOT NULL,
 
                                  CONSTRAINT fk_detfactura_factura  FOREIGN KEY (id_factura) REFERENCES factura (id_factura),
-                                 CONSTRAINT fk_detfactura_producto FOREIGN KEY (sku)        REFERENCES producto (sku)
+                                 CONSTRAINT fk_detfactura_producto FOREIGN KEY (id_producto)        REFERENCES producto (id_producto)
 );
 
 ------------------------------
@@ -386,7 +385,7 @@ CREATE INDEX idx_producto_nombre               ON producto (nombre);
 CREATE INDEX idx_almacen_proveedor             ON almacen (id_proveedor);
 
 -- producto_almacen
-CREATE INDEX idx_prodalmacen_sku               ON producto_almacen (sku);
+CREATE INDEX idx_prodalmacen_id_producto               ON producto_almacen (id_producto);
 
 -- tarifa_regla
 CREATE INDEX idx_tarifaregla_proveedor         ON tarifa_regla (id_proveedor);
@@ -396,7 +395,7 @@ CREATE INDEX idx_tramo_regla                   ON tramo_tarifa (id_regla);
 
 -- precio_base
 CREATE INDEX idx_precio_proveedor              ON precio_base (id_proveedor);
-CREATE INDEX idx_precio_sku                    ON precio_base (sku);
+CREATE INDEX idx_precio_id_producto                    ON precio_base (id_producto);
 
 -- contrato_empresa_tarifas
 CREATE INDEX idx_contrato_empresa              ON contrato_empresa_tarifas (id_empresa);
@@ -404,7 +403,7 @@ CREATE INDEX idx_contrato_proveedor            ON contrato_empresa_tarifas (id_p
 
 -- contrato_empresa_detalle
 CREATE INDEX idx_contdetalle_contrato          ON contrato_empresa_detalle (id_contrato);
-CREATE INDEX idx_contdetalle_sku               ON contrato_empresa_detalle (sku);
+CREATE INDEX idx_contdetalle_id_producto               ON contrato_empresa_detalle (id_producto);
 
 -- reglas_comision
 CREATE INDEX idx_reglacomision_proveedor       ON reglas_comision (id_proveedor);
@@ -419,9 +418,8 @@ CREATE INDEX idx_orden_estado                  ON orden_compra (id_estado);
 CREATE INDEX idx_orden_fecha                   ON orden_compra (fecha);
 
 -- detalle_orden
-CREATE INDEX idx_detorden_orden   ON detalle_orden (id_orden);
-CREATE INDEX idx_detorden_sku     ON detalle_orden (sku);
-CREATE INDEX idx_detorden_almacen ON detalle_orden (id_almacen);
+CREATE INDEX idx_detorden_orden                ON detalle_orden (id_orden);
+CREATE INDEX idx_detorden_id_producto                  ON detalle_orden (id_producto);
 
 -- comision
 CREATE INDEX idx_comision_proveedor            ON comision (id_proveedor);
@@ -433,4 +431,9 @@ CREATE INDEX idx_factura_estado                ON factura (id_estado);
 
 -- detalle_factura
 CREATE INDEX idx_detfactura_factura            ON detalle_factura (id_factura);
-CREATE INDEX idx_detfactura_sku                ON detalle_factura (sku);
+CREATE INDEX idx_detfactura_id_producto                ON detalle_factura (id_producto);
+
+ALTER TABLE comision ADD COLUMN id_regla UUID
+    REFERENCES reglas_comision(id_regla);
+
+ALTER TABLE detalle_orden ADD COLUMN id_almacen UUID REFERENCES almacen(id_almacen);
