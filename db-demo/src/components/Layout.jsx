@@ -9,6 +9,7 @@ const proveedorLinks = [
   { to: '/contratos',  icon: '📄', label: 'Contratos'        },
   { to: '/procedures', icon: '⚙️', label: 'Procedures'       },
    { to: '/reglas-tarifa', icon: '⚖️', label: 'Reglas de tarifa' },
+   { to: '/productos', icon: '🛍️', label: 'Productos'        },
 ]
 
 const empresaLinks = [

@@ -6,6 +6,7 @@ const links = [
   { to: '/ordenes',    label: '📦 Órdenes (Triggers T2/T3)' },
   { to: '/facturas',   label: '🧾 Facturas (Triggers T4/T5)' },
   { to: '/procedures', label: '⚙️ Procedures' },
+  
 ]
 
 export default function NavBar() {

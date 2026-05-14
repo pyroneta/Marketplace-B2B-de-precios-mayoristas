@@ -2,7 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './AuthContext'
 
 import Login from './Pages/Login'
-import Registro from './Pages/Registro'
+import Registro from './Pages/RegistroEmpresa'
 
 import Layout from './components/Layout'
 import Dashboard from './Pages/Dashboard'
@@ -13,6 +13,7 @@ import Facturas from './Pages/Facturas'
 import Contratos from './Pages/Contratos'
 import TarifasProducto from './Pages/TarifasProducto'
 import ReglasTarifa from './Pages/ReglasTarifa'
+import Productos from './Pages/Productos'
 
 function ProtectedRoutes() {
   const { session } = useAuth()
@@ -30,8 +31,10 @@ function ProtectedRoutes() {
 
 
         <Route path="/contratos" element={<Contratos />} />
-<Route path="/facturas" element={<Facturas />} />
-<Route path="/tarifas-producto" element={<TarifasProducto />} />
+        <Route path="/facturas" element={<Facturas />} />
+        <Route path="/tarifas-producto" element={<TarifasProducto />} />
+
+        <Route path="/productos" element={<Productos />} />
 
         {/* Vistas proveedor */}
         <Route path="/stock" element={<VistaPage tipo="stock" />} />

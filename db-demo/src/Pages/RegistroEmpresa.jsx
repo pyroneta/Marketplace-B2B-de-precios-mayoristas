@@ -119,7 +119,7 @@ export default function Registro() {
 
     // CREAMOS LA FUNCION AUXILIAR PORQUE SUPA NO DETECTA PROCEDURE DESDE EL FRONT 
     try {
-      const { error: errEmpresa } = await supabase.rpc('f_empresa_nueva', {
+      const { error: errEmpresa } = await supabase.rpc('fn_agregar_empresa', {
   p_empresa_datos: {
     nombre: empresa.nombre,
     razon_social: empresa.razon_social,
